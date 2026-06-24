@@ -16,6 +16,7 @@
 <%
     String ctx = request.getContextPath();
     String error = (String) request.getAttribute("error");
+    String success = (String) request.getAttribute("success");
     List<Poll> polls = (List<Poll>) request.getAttribute("polls");
     Integer pollCount = (Integer) request.getAttribute("pollCount");
     Integer totalVotes = (Integer) request.getAttribute("totalVotes");
@@ -103,10 +104,14 @@
             <p class="eyebrow">Create Poll</p>
             <h2>投票信息</h2>
             <p class="muted panel-intro">发布前请确认标题清晰、说明完整，并至少填写两个有效选项。</p>
-        <% if (error != null) { %>
+        <% if (error != null && !error.trim().isEmpty()) { %>
             <div class="message error"><%= error %></div>
         <% } %>
+        <% if (success != null && !success.trim().isEmpty()) { %>
+            <div class="message success"><%= success %></div>
+        <% } %>
         <form class="form-grid" method="post" action="<%= ctx %>/admin">
+            <input type="hidden" name="action" value="create">
             <label>
                 投票标题
                 <input name="title" maxlength="120" placeholder="例如：校园歌手大赛最受欢迎节目" required>
@@ -167,6 +172,11 @@
                     <div class="admin-poll-actions">
                         <a class="button secondary" href="<%= ctx %>/">用户首页</a>
                         <a class="button" href="<%= ctx %>/poll?id=<%= poll.getId() %>">查看结果</a>
+                        <form method="post" action="<%= ctx %>/admin">
+                            <input type="hidden" name="action" value="delete">
+                            <input type="hidden" name="pollId" value="<%= poll.getId() %>">
+                            <button class="button danger" type="submit" onclick="return confirm('确认删除这个投票吗？删除后票数和记录也会一并清除。');">删除投票</button>
+                        </form>
                     </div>
                 </article>
             <%  }

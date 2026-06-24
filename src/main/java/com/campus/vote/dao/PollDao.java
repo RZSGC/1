@@ -94,6 +94,15 @@ public class PollDao {
         }
     }
 
+    public boolean deletePoll(long pollId) throws Exception {
+        String sql = "DELETE FROM polls WHERE id = ?";
+        try (Connection connection = Database.getConnection();
+             PreparedStatement ps = connection.prepareStatement(sql)) {
+            ps.setLong(1, pollId);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     public VoteResult vote(long pollId, long optionId, String voterKey) throws Exception {
         String insertVote = "INSERT INTO votes(poll_id, option_id, voter_key) VALUES(?, ?, ?)";
         String updateOption = "UPDATE poll_options SET vote_count = vote_count + 1 WHERE id = ? AND poll_id = ?";
