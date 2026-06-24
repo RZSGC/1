@@ -25,6 +25,12 @@ public class AdminServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
+        String action = trim(request.getParameter("action"));
+        if ("delete".equals(action)) {
+            handleDelete(request, response);
+            return;
+        }
+
         String title = trim(request.getParameter("title"));
         String description = trim(request.getParameter("description"));
         String[] rawOptions = request.getParameterValues("options");
@@ -53,8 +59,40 @@ public class AdminServlet extends HttpServlet {
         }
     }
 
+    private void handleDelete(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        long pollId = parseLong(request.getParameter("pollId"));
+        if (pollId <= 0) {
+            response.sendRedirect(request.getContextPath() + "/admin?error=" + urlEncode("要删除的投票不存在。"));
+            return;
+        }
+
+        try {
+            boolean deleted = pollDao.deletePoll(pollId);
+            if (deleted) {
+                response.sendRedirect(request.getContextPath() + "/admin?success=" + urlEncode("投票已删除。"));
+            } else {
+                response.sendRedirect(request.getContextPath() + "/admin?error=" + urlEncode("要删除的投票不存在。"));
+            }
+        } catch (Exception e) {
+            throw new ServletException(e);
+        }
+    }
+
     private String trim(String value) {
         return value == null ? "" : value.trim();
+    }
+
+    private long parseLong(String value) {
+        try {
+            return Long.parseLong(value);
+        } catch (Exception e) {
+            return -1L;
+        }
+    }
+
+    private String urlEncode(String text) throws IOException {
+        return java.net.URLEncoder.encode(text, "UTF-8");
     }
 
     private void showAdminPage(HttpServletRequest request, HttpServletResponse response)
@@ -63,6 +101,12 @@ public class AdminServlet extends HttpServlet {
             List<Poll> polls = pollDao.findAll();
             int totalVotes = polls.stream().mapToInt(Poll::getTotalVotes).sum();
 
+            if (request.getAttribute("error") == null) {
+                request.setAttribute("error", trim(request.getParameter("error")));
+            }
+            if (request.getAttribute("success") == null) {
+                request.setAttribute("success", trim(request.getParameter("success")));
+            }
             request.setAttribute("polls", polls);
             request.setAttribute("pollCount", polls.size());
             request.setAttribute("totalVotes", totalVotes);
