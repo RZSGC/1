@@ -1,0 +1,36 @@
+CREATE TABLE IF NOT EXISTS polls (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title VARCHAR(120) NOT NULL,
+    description VARCHAR(500),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS poll_options (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    poll_id BIGINT NOT NULL,
+    option_text VARCHAR(120) NOT NULL,
+    vote_count INT DEFAULT 0,
+    CONSTRAINT fk_option_poll FOREIGN KEY (poll_id) REFERENCES polls(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS votes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    poll_id BIGINT NOT NULL,
+    option_id BIGINT NOT NULL,
+    voter_key VARCHAR(180) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT fk_vote_poll FOREIGN KEY (poll_id) REFERENCES polls(id) ON DELETE CASCADE,
+    CONSTRAINT fk_vote_option FOREIGN KEY (option_id) REFERENCES poll_options(id) ON DELETE CASCADE,
+    CONSTRAINT uk_vote_once UNIQUE (poll_id, voter_key)
+);
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username VARCHAR(80) NOT NULL,
+    password_hash VARCHAR(64) NOT NULL,
+    display_name VARCHAR(80) NOT NULL,
+    role VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_user_username UNIQUE (username),
+    CONSTRAINT ck_user_role CHECK (role IN ('USER', 'ADMIN'))
+);
